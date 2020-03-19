@@ -3,7 +3,7 @@ Individuazione dei dispositivi Wi-Fi usando Raspberry PI
 
 ## Set-up
 Assicurarsi che l'interfaccia di rete riesca a lavorare in monitor mode, sulla seguente pagina web ci sono alcune interfacce di rete che riescono a farlo:
-https://null-byte.wonderhowto.com/how-to/buy-best-wireless-network-adapter-for-wi-fi-hacking-2019-0178550/
+[Interfacce di rete](https://null-byte.wonderhowto.com/how-to/buy-best-wireless-network-adapter-for-wi-fi-hacking-2019-0178550)
 Collegare l'antenna al Raspberry PI e impostare l'antenna in monitor mode.
 Individuare prima l'interfaccia di rete usando il comando:
 ```python
