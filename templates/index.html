@@ -1,0 +1,178 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="static/style.css">
+
+</head>
+
+<body>
+    <script type="text/javascript">
+        var ipaddress = "192.168.1.96";
+        var port = "8888";
+
+        var socket = new WebSocket("ws:" + ipaddress + ":" + port);
+        //socket.send("Ecco del testo che il server sta aspettando di ricevere!"); 
+
+        socket.onopen = function (event) {
+            //socket.send("Connection started");
+            console.log("im connected to the server");
+
+        };
+
+        function sendScan() {
+            var timeleft = parseInt(document.getElementById("time").value);
+            startScanning(timeleft);
+            startTimer(timeleft);
+        }
+
+        function cleanCache() {
+            socket.send("$cleanCache-0");
+        }
+
+        function startScanning(time) {
+            socket.send("$scan" + "-" + time);
+        }
+
+        function startTimer(timeleft) {
+            document.getElementById("progressBar").setAttribute("max", timeleft);
+            max = parseInt(document.getElementById("progressBar").getAttribute("max")) + 1;
+            //console.log(max);
+
+
+            var downloadTimer = setInterval(function () {
+
+                document.getElementById("progressBar").value = max - timeleft;
+                timeleft -= 1;
+                if (timeleft <= 0) {
+                    clearInterval(downloadTimer);
+                }
+            }, 1000);
+        }
+
+        //Azioni da compiere quando arriva il messaggio al server
+        socket.onmessage = function (event) {
+
+            var msg = event.data;
+            var split = msg.split("$");
+            var protocol = split[0];
+            var attributes = split[1];
+
+            if (protocol == "numDev") {
+                var numberDevice = attributes;
+                document.getElementById("num").innerHTML = split[1];
+            }
+
+            //console.log(event.data);
+            if (protocol == "dev") {
+                var device = attributes.split('---')[0];
+                var dbm = attributes.split('---')[1];
+                var meters = convertdBmToMeters(parseInt(dbm));
+                createDeviceElement(device, meters);
+            }
+        }
+
+        function createDeviceElement(device, meters) {
+            var messages = document.getElementById('elenco'),
+                message = document.createElement('li'),
+                createA = document.createElement('a'),
+                button = createDeleteButton("1", "delete"),
+                content = document.createTextNode(device + " distante " + meters + "metri");
+
+            button.addEventListener("click", function () {
+                socket.send("Button was clicked");
+                //console.log("sent");
+            });
+
+            message.appendChild(createA);
+            createA.appendChild(content);
+            messages.appendChild(message);
+            createA.appendChild(button);
+        }
+
+        function createDeleteButton(id, text) {
+            var button = document.createElement('button');
+            var content = document.createTextNode(text);
+
+            button.setAttribute("id", id);
+            button.setAttribute("value", "Dima");
+            button.setAttribute("class", "deleteDeviceButton");
+
+            button.appendChild(content);
+            return button;
+        }
+
+        function convertdBmToMeters(dBmneg) {
+            dBm = (-1) * dBmneg;
+            console.log("Value to convert: " + dBm);
+
+            var m = 0;
+            if (dBm <= 17) {
+                m = 0, 2;
+            }
+            if (dBm > 17 && dBm <= 20) {
+                m = 1;
+            }
+            if (dBm > 20 && dBm <= 42) {
+                m = 2;
+            }
+            if (dBm > 42 && dBm <= 62) {
+                m = 3;
+            }
+            if (dBm > 62 && dBm <= 78) {
+                m = 4;
+            }
+            if (dBm > 78 && dBm <= 80) {
+                m = 6;
+            }
+            if (dBm > 80 && dBm <= 91) {
+                m = 8;
+            }
+            if (dBm > 91) {
+                m = 13;
+            }
+
+            return m;
+        }
+    </script>
+
+    <div class="container">
+        <h1 style="text-align: center;">Individuazione dei Dispositivi Wi-Fi usando Raspberry PI</h1>
+        <h3 style="text-align: center;">Inserire il tempo e cliccare sul pulsante "inizia scansione"</h3>
+        <br>
+
+        <div class="inputData">
+            <span style="float: left;">Tempo: &nbsp </span>
+            <div class="seconds"><input type="text" id="time" style="width: 80px;"></div> <span style="float: left;">[s] </span>
+            
+            <div class="startBtn"><button onclick=sendScan()>Inizia scansione</button></div>
+            <span style="float: left;"> Svuota: </span>
+            <div class="startBtn"><button onclick=cleanCache()>Clean cache</button></div>
+            
+            <span style="float: left;">
+            <span style="float: left;">Tempo trascorso: </span>
+            <div class="progress">
+                    <progress value="0" max="100" id="progressBar" style="width: 300px;"></progress>
+                    
+            </div>
+            
+            </span><span style="float: left;">&nbsp s</span>
+        </div>
+        <hr>
+        <div class="numberlist">
+            <ol id="elenco">
+                <!-- <li><a>Dispositivi <button id=1>delete device</button></a></li> -->
+            </ol>
+        </div>
+
+        <div class="img">
+            <h2>sono stati trovati <p id="num">n</p> Dispositivi</h2>
+        </div>
+
+
+    </div>
+
+
+</body>
+
+</html>
